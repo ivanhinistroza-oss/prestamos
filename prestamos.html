@@ -334,7 +334,10 @@ function go(v) { view = v; render(); window.scrollTo(0, 0); }
 const sheet = $("#sheet");
 function openSheet(html) {
   $("#sheetBody").innerHTML = html;
-  if (!sheet.open) { sheet.showModal(); history.pushState({ sheet: 1 }, ""); }
+  if (!sheet.open) {
+    sheet.showModal();
+    try { history.pushState({ sheet: 1 }, ""); } catch (e) {}
+  }
   sheet.querySelector(".sheet").scrollTop = 0;
 }
 function closeSheet() { if (sheet.open) sheet.close(); }
