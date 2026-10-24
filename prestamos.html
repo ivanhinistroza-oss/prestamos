@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Préstamos y deudas</title>
+<style>
+:root{
+  --bg:#f3f4f6;--card:#fff;--ink:#15171c;--muted:#6b7280;--line:#e5e7eb;
+  --brand:#0f766e;--brand-ink:#fff;--brand-bg:#ccfbf1;
+  --green:#15803d;--green-bg:#dcfce7;--red:#b91c1c;--red-bg:#fee2e2;
+  --amber:#a16207;--amber-bg:#fef3c7;--shadow:0 1px 2px rgba(0,0,0,.05),0 2px 10px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0e1014;--card:#181b21;--ink:#eef0f3;--muted:#9aa1ac;--line:#2a2f37;
+  --brand:#2dd4bf;--brand-ink:#042f2a;--brand-bg:#0d3b36;
+  --green:#4ade80;--green-bg:#11331f;--red:#f87171;--red-bg:#3a1616;
+  --amber:#fbbf24;--amber-bg:#3a2c0b;--shadow:none;
+}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--brand);color:var(--brand-ink)}
+header h1{flex:1;margin:0;font-size:19px;font-weight:700}
+.icon-btn{border:0;background:transparent;color:inherit;width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1}
+main{max-width:560px;margin:0 auto;padding:14px 16px 80px}
+h2{font-size:15px;margin:20px 2px 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:var(--card);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.card small{display:block;color:var(--muted);font-size:13px}
+.card b{display:block;font-size:21px;margin-top:2px;white-space:nowrap}
+.card .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.card.wide{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between}
+.card.wide b{font-size:24px}
+.pos{color:var(--green)}.neg{color:var(--red)}.warn{color:var(--amber)}
+
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.av{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:17px}
+.av.presto{background:var(--green-bg);color:var(--green)}
+.av.debo{background:var(--red-bg);color:var(--red)}
+.mid{flex:1;min-width:0}
+.mid b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mid small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mid small.vencido{color:var(--red)}.mid small.pronto{color:var(--amber)}
+.bar{display:block;height:5px;border-radius:5px;background:var(--line);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:5px}
+.amt{text-align:right;flex:none}
+.amt b{display:block;font-size:16px}
+.amt small{color:var(--muted);font-size:12px}
+.badge{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.badge.pagado{background:var(--brand-bg);color:var(--brand)}
+.badge.vencido{background:var(--red-bg);color:var(--red)}
+.badge.pronto{background:var(--amber-bg);color:var(--amber)}
+.badge.pendiente{background:var(--line);color:var(--muted)}
+.badge.presto{background:var(--green-bg);color:var(--green)}
+.badge.debo{background:var(--red-bg);color:var(--red)}
+
+.chips{display:flex;gap:8px;overflow-x:auto;margin:0 -16px 10px;padding:2px 16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:20px;padding:7px 14px;font-size:14px}
+.chip.on{background:var(--brand);border-color:var(--brand);color:var(--brand-ink);font-weight:600}
+.search{width:100%;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:11px 14px;margin-bottom:10px;font-size:16px}
+
+.empty{text-align:center;color:var(--muted);padding:28px 16px;background:var(--card);border-radius:16px}
+.empty .big{font-size:40px}
+.empty p{margin:6px 0 14px}
+
+.btn{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px 16px;font-weight:600;min-height:46px}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.danger{color:var(--red)}
+.btn.wa{background:#25d366;border-color:#25d366;color:#05301a}
+.btn.block{width:100%}
+
+.fab{position:fixed;right:18px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:6;width:58px;height:58px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);font-size:30px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;border:0;background:transparent;padding:9px 4px 8px;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
+nav button span{font-size:21px;line-height:1}
+nav button.on{color:var(--brand);font-weight:600}
+
+dialog{border:0;padding:0;margin:auto 0 0;width:100%;max-width:100%;max-height:92vh;background:var(--card);color:var(--ink);border-radius:20px 20px 0 0;animation:up .2s ease-out}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+@media (min-width:600px){dialog{max-width:520px;margin:auto;border-radius:20px}}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet{padding:8px 16px calc(18px + env(safe-area-inset-bottom));overflow-y:auto;max-height:92vh}
+.grip{width:40px;height:5px;border-radius:5px;background:var(--line);margin:4px auto 10px}
+.sheet h3{margin:0 0 12px;font-size:20px}
+.fld{display:block;font-size:14px;color:var(--muted);margin-bottom:12px}
+.fld input,.fld textarea{display:block;width:100%;margin-top:4px;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:11px 12px;font-size:16px}
+.fld input:focus,.fld textarea:focus,.search:focus{outline:2px solid var(--brand);border-color:transparent}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;border:2px solid var(--line);border-radius:12px;padding:10px 6px;font-weight:600}
+.seg span small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.seg input:checked+span.presto{border-color:var(--green);background:var(--green-bg);color:var(--green)}
+.seg input:checked+span.debo{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.totline{font-size:14px;color:var(--muted);margin:-4px 0 12px}
+.totline b{color:var(--ink)}
+.actions{display:flex;gap:10px;margin-top:6px}
+.actions .btn{flex:1}
+
+.hero{text-align:center;padding:4px 0 12px}
+.hero small{color:var(--muted)}
+.hero .big{font-size:34px;font-weight:700;margin:2px 0}
+.hero .bar{height:8px;margin:10px 0 6px}
+.info{border-top:1px solid var(--line);margin:8px 0}
+.info div{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line);font-size:15px}
+.info div span:first-child{color:var(--muted)}
+.info div span:last-child{text-align:right;overflow-wrap:anywhere}
+.box{background:var(--bg);border-radius:14px;padding:12px;margin:12px 0}
+.box .row2{margin-bottom:8px}
+.box .fld{margin-bottom:0}
+.box .fld input{background:var(--card)}
+.pays{list-style:none;margin:0;padding:0}
+.pays li{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.pays li div{flex:1;min-width:0}
+.pays li small{display:block;color:var(--muted);font-size:13px}
+.pays .x{border:0;background:transparent;color:var(--muted);font-size:20px;width:36px;height:36px}
+.btns{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.menu .btn{width:100%;text-align:left;margin-bottom:8px}
+.note{font-size:13px;color:var(--muted);margin:8px 2px}
+
+.person{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
+.person .mid small span{margin-right:8px}
+
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>Préstamos y deudas</h1>
+  <button class="icon-btn" data-act="menu" aria-label="Más opciones">⋮</button>
+</header>
+
+<main id="main"></main>
+
+<button class="fab" data-act="nuevo" aria-label="Nuevo préstamo o deuda">+</button>
+
+<nav>
+  <button data-view="inicio"><span>🏠</span>Inicio</button>
+  <button data-view="lista"><span>📋</span>Movimientos</button>
+  <button data-view="personas"><span>👥</span>Personas</button>
+</nav>
+
+<dialog id="sheet"><div class="sheet"><div class="grip"></div><div id="sheetBody"></div></div></dialog>
+<input type="file" id="fileIn" accept="application/json,.json" hidden>
+<div id="toast"></div>
+
+<script>
+const KEY = "prestamos.data";
+let data = { items: [] };
+let view = "inicio", filtro = "todos", busca = "";
+
+const $ = s => document.querySelector(s);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const r2 = n => Math.round((+n || 0) * 100) / 100;
+const num = s => r2(parseFloat(String(s || "").replace(",", ".")));
+const money = n => "S/ " + r2(n).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clave = s => String(s || "").trim().toLowerCase();
+
+function hoy() {
+  const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function fdate(s) {
+  if (!s) return "";
+  const [y, m, d] = s.split("-");
+  return `${d}/${m}/${y}`;
+}
+function dias(s) {
+  return Math.round((new Date(s + "T00:00:00") - new Date(hoy() + "T00:00:00")) / 864e5);
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (d && Array.isArray(d.items)) data = d;
+  } catch (e) {}
+}
+function save() {
+  try { localStorage.setItem(KEY, JSON.stringify(data)); }
+  catch (e) { toast("No se pudo guardar en este navegador"); }
+}
+
+// Cálculos de cada préstamo o deuda
+const total = it => r2(it.monto * (1 + (+it.interes || 0) / 100));
+const pagado = it => r2((it.abonos || []).reduce((s, a) => s + (+a.monto || 0), 0));
+const saldo = it => Math.max(0, r2(total(it) - pagado(it)));
+function estado(it) {
+  if (saldo(it) <= 0) return "pagado";
+  if (it.vence && it.vence < hoy()) return "vencido";
+  if (it.vence && dias(it.vence) <= 7) return "pronto";
+  return "pendiente";
+}
+const ESTADO = { pagado: "Pagado", vencido: "Vencido", pronto: "Vence pronto", pendiente: "Pendiente" };
+function venceTexto(it) {
+  if (saldo(it) <= 0) return "Pagado";
+  if (!it.vence) return "Sin fecha límite";
+  const d = dias(it.vence);
+  if (d < -1) return `Venció hace ${-d} días`;
+  if (d === -1) return "Venció ayer";
+  if (d === 0) return "Vence hoy";
+  if (d === 1) return "Vence mañana";
+  return `Vence el ${fdate(it.vence)}`;
+}
+const RANGO = { vencido: 0, pronto: 1, pendiente: 2, pagado: 3 };
+function ordenar(items) {
+  return items.slice().sort((a, b) => {
+    const ea = estado(a), eb = estado(b);
+    if (ea !== eb) return RANGO[ea] - RANGO[eb];
+    if (ea === "pagado") return (b.fecha || "").localeCompare(a.fecha || "");
+    return (a.vence || "9999").localeCompare(b.vence || "9999");
+  });
+}
+function totales() {
+  let meDeben = 0, yoDebo = 0, vencidoMonto = 0, vencidos = 0;
+  for (const it of data.items) {
+    const s = saldo(it);
+    if (it.tipo === "presto") meDeben += s; else yoDebo += s;
+    if (estado(it) === "vencido") { vencidos++; vencidoMonto += s; }
+  }
+  return { meDeben: r2(meDeben), yoDebo: r2(yoDebo), vencidos, vencidoMonto: r2(vencidoMonto) };
+}
+const find = id => data.items.find(x => x.id === id);
+
+// Vistas
+function itemHtml(it) {
+  const s = saldo(it), t = total(it), e = estado(it);
+  const pct = t > 0 ? Math.min(100, Math.round(pagado(it) / t * 100)) : 0;
+  const tipo = it.tipo === "presto" ? "Me debe" : "Le debo";
+  return `<button class="item" data-open="${it.id}">
+    <span class="av ${it.tipo}">${esc((it.persona || "?").trim().charAt(0).toUpperCase())}</span>
+    <span class="mid"><b>${esc(it.persona)}</b>
+      <small class="${e}">${tipo} · ${venceTexto(it)}</small>
+      <span class="bar"><i style="width:${pct}%"></i></span></span>
+    <span class="amt">${e === "pagado"
+      ? `<span class="badge pagado">Pagado</span><br><small>${money(t)}</small>`
+      : `<b class="${it.tipo === "presto" ? "pos" : "neg"}">${money(s)}</b><small>de ${money(t)}</small>`}</span>
+  </button>`;
+}
+
+function renderInicio() {
+  const t = totales(), bal = r2(t.meDeben - t.yoDebo);
+  if (!data.items.length) {
+    return `<div class="empty"><div class="big">🤝</div>
+      <p>Aquí verás a quién le prestaste y a quién le debes.</p>
+      <button class="btn primary" data-act="nuevo">Registrar el primero</button></div>`;
+  }
+  const atencion = ordenar(data.items.filter(it => ["vencido", "pronto"].includes(estado(it))));
+  return `<div class="cards">
+      <div class="card"><small>Me deben</small><b class="pos">${money(t.meDeben)}</b></div>
+      <div class="card"><small>Yo debo</small><b class="neg">${money(t.yoDebo)}</b></div>
+      <div class="card wide"><div><small>Balance</small><div class="sub">${bal >= 0 ? "a tu favor" : "en contra"}</div></div>
+        <b class="${bal >= 0 ? "pos" : "neg"}">${money(Math.abs(bal))}</b></div>
+      ${t.vencidos ? `<div class="card wide"><div><small>Vencidos</small><div class="sub">${t.vencidos} ${t.vencidos === 1 ? "pendiente" : "pendientes"}</div></div><b class="neg">${money(t.vencidoMonto)}</b></div>` : ""}
+    </div>
+    <h2>Atención</h2>
+    ${atencion.length ? `<div class="list">${atencion.map(itemHtml).join("")}</div>`
+      : `<div class="empty">✅ Nada vencido ni por vencer esta semana.</div>`}
+    <h2>Últimos registrados</h2>
+    <div class="list">${data.items.slice().sort((a, b) => (b.creado || 0) - (a.creado || 0)).slice(0, 5).map(itemHtml).join("")}</div>`;
+}
+
+const FILTROS = [["todos", "Todos"], ["presto", "Me deben"], ["debo", "Yo debo"], ["vencido", "Vencidos"], ["pagado", "Pagados"]];
+function filtrados() {
+  const q = clave(busca);
+  return ordenar(data.items.filter(it => {
+    if (q && !clave(it.persona).includes(q) && !clave(it.nota).includes(q)) return false;
+    const e = estado(it);
+    if (filtro === "presto" || filtro === "debo") return it.tipo === filtro && e !== "pagado";
+    if (filtro === "vencido") return e === "vencido";
+    if (filtro === "pagado") return e === "pagado";
+    return true;
+  }));
+}
+function listaHtml() {
+  const items = filtrados();
+  return items.length ? `<div class="list">${items.map(itemHtml).join("")}</div>`
+    : `<div class="empty">${data.items.length ? "No hay nada con este filtro." : "Todavía no registras nada. Toca el botón + para empezar."}</div>`;
+}
+function renderLista() {
+  return `<input class="search" id="busca" type="search" placeholder="Buscar persona o nota" value="${esc(busca)}">
+    <div class="chips">${FILTROS.map(([k, l]) => `<button class="chip ${filtro === k ? "on" : ""}" data-filtro="${k}">${l}</button>`).join("")}</div>
+    <div id="listaRes">${listaHtml()}</div>`;
+}
+
+function personas() {
+  const map = new Map();
+  for (const it of data.items) {
+    const k = clave(it.persona);
+    if (!map.has(k)) map.set(k, { nombre: it.persona.trim(), meDebe: 0, leDebo: 0, n: 0, abiertos: 0 });
+    const p = map.get(k), s = saldo(it);
+    p.n++;
+    if (s > 0) p.abiertos++;
+    if (it.tipo === "presto") p.meDebe += s; else p.leDebo += s;
+  }
+  return [...map.values()].map(p => ({ ...p, neto: r2(p.meDebe - p.leDebo) }))
+    .sort((a, b) => Math.abs(b.neto) - Math.abs(a.neto) || a.nombre.localeCompare(b.nombre));
+}
+function renderPersonas() {
+  const ps = personas();
+  if (!ps.length) return `<div class="empty">Aún no hay personas. Toca el botón + para registrar un préstamo.</div>`;
+  return `<p class="note">El neto resta lo que tú le debes a cada persona de lo que ella te debe.</p>
+    <div class="list">${ps.map(p => `<button class="person" data-persona="${esc(p.nombre)}">
+      <span class="av ${p.neto >= 0 ? "presto" : "debo"}">${esc(p.nombre.charAt(0).toUpperCase())}</span>
+      <span class="mid"><b>${esc(p.nombre)}</b><small>
+        ${p.meDebe > 0 ? `<span>Me debe ${money(p.meDebe)}</span>` : ""}
+        ${p.leDebo > 0 ? `<span>Le debo ${money(p.leDebo)}</span>` : ""}
+        ${!p.abiertos ? "<span>Todo pagado</span>" : ""}</small></span>
+      <span class="amt">${p.neto === 0 ? `<b>${money(0)}</b><small>a mano</small>`
+        : `<b class="${p.neto > 0 ? "pos" : "neg"}">${money(Math.abs(p.neto))}</b><small>${p.neto > 0 ? "me debe" : "le debo"}</small>`}</span>
+    </button>`).join("")}</div>`;
+}
+
+function render() {
+  $("#main").innerHTML = view === "lista" ? renderLista() : view === "personas" ? renderPersonas() : renderInicio();
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === view));
+  const inp = $("#busca");
+  if (inp) inp.addEventListener("input", () => { busca = inp.value; $("#listaRes").innerHTML = listaHtml(); });
+}
+function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+// Hoja inferior (formularios y detalle). El botón "atrás" del celular la cierra.
+const sheet = $("#sheet");
+function openSheet(html) {
+  $("#sheetBody").innerHTML = html;
+  if (!sheet.open) { sheet.showModal(); history.pushState({ sheet: 1 }, ""); }
+  sheet.querySelector(".sheet").scrollTop = 0;
+}
+function closeSheet() { if (sheet.open) sheet.close(); }
+sheet.addEventListener("close", () => { if (history.state && history.state.sheet) history.back(); });
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+window.addEventListener("popstate", () => { if (sheet.open) sheet.close(); });
+
+function formHtml(it) {
+  const nuevo = !it;
+  it = it || { tipo: "presto", fecha: hoy() };
+  const nombres = personas().map(p => `<option value="${esc(p.nombre)}">`).join("");
+  return `<h3>${nuevo ? "Nuevo registro" : "Editar"}</h3>
+  <form id="f" autocomplete="off">
+    <div class="seg">
+      <label><input type="radio" name="tipo" value="presto" ${it.tipo === "presto" ? "checked" : ""}><span class="presto">Yo presté<small>me deben</small></span></label>
+      <label><input type="radio" name="tipo" value="debo" ${it.tipo === "debo" ? "checked" : ""}><span class="debo">Me prestaron<small>yo debo</small></span></label>
+    </div>
+    <label class="fld">Persona<input name="persona" list="nombres" required value="${esc(it.persona)}" placeholder="Nombre"></label>
+    <datalist id="nombres">${nombres}</datalist>
+    <div class="row2">
+      <label class="fld">Monto (S/)<input name="monto" inputmode="decimal" required placeholder="0.00" value="${it.monto ?? ""}"></label>
+      <label class="fld">Interés % <small>(opcional)</small><input name="interes" inputmode="decimal" placeholder="0" value="${it.interes || ""}"></label>
+    </div>
+    <div class="totline" id="totline"></div>
+    <div class="row2">
+      <label class="fld">Fecha<input type="date" name="fecha" value="${it.fecha || ""}"></label>
+      <label class="fld">Fecha límite<input type="date" name="vence" value="${it.vence || ""}"></label>
+    </div>
+    <label class="fld">Celular <small>(para recordar por WhatsApp)</small><input name="telefono" type="tel" inputmode="tel" placeholder="987 654 321" value="${esc(it.telefono)}"></label>
+    <label class="fld">Nota <small>(opcional)</small><textarea name="nota" rows="2" placeholder="Ej.: para el pasaje">${esc(it.nota)}</textarea></label>
+    <div class="actions">
+      <button type="button" class="btn" data-act="${nuevo ? "cerrar" : "detalle"}" data-id="${it.id || ""}">Cancelar</button>
+      <button class="btn primary">Guardar</button>
+    </div>
+  </form>`;
+}
+function openForm(id) {
+  const it = id ? find(id) : null;
+  openSheet(formHtml(it));
+  const f = $("#f");
+  const upd = () => {
+    const m = num(f.monto.value), i = num(f.interes.value);
+    $("#totline").innerHTML = m > 0 && i > 0 ? `Total a devolver: <b>${money(m * (1 + i / 100))}</b>` : "";
+  };
+  f.monto.addEventListener("input", upd);
+  f.interes.addEventListener("input", upd);
+  upd();
+  // Si la persona ya existe, completa su celular
+  f.persona.addEventListener("change", () => {
+    if (f.telefono.value) return;
+    const prev = data.items.find(x => clave(x.persona) === clave(f.persona.value) && x.telefono);
+    if (prev) f.telefono.value = prev.telefono;
+  });
+  f.addEventListener("submit", e => {
+    e.preventDefault();
+    const monto = num(f.monto.value), interes = num(f.interes.value);
+    const persona = f.persona.value.trim();
+    if (!persona) return toast("Escribe el nombre de la persona");
+    if (!(monto > 0)) return toast("Escribe un monto mayor a 0");
+    if (interes < 0) return toast("El interés no puede ser negativo");
+    if (f.vence.value && f.fecha.value && f.vence.value < f.fecha.value) return toast("La fecha límite es anterior a la fecha del préstamo");
+    const campos = {
+      tipo: f.tipo.value, persona, monto, interes,
+      fecha: f.fecha.value, vence: f.vence.value,
+      telefono: f.telefono.value.trim(), nota: f.nota.value.trim()
+    };
+    let target = it;
+    if (it) Object.assign(it, campos);
+    else { target = { id: uid(), creado: Date.now(), abonos: [], ...campos }; data.items.push(target); }
+    save(); render();
+    toast(it ? "Cambios guardados" : "Registrado");
+    openDetail(target.id);
+  });
+  if (!it) setTimeout(() => f.persona.focus(), 250);
+}
+
+function waLink(it) {
+  let n = String(it.telefono || "").replace(/\D/g, "");
+  if (n.length === 9) n = "51" + n;
+  const s = saldo(it);
+  let msg = `Hola ${it.persona.trim()}, te escribo para recordarte el saldo pendiente de ${money(s)}`;
+  if (it.vence) msg += dias(it.vence) < 0 ? `, que venció el ${fdate(it.vence)}` : `, que vence el ${fdate(it.vence)}`;
+  msg += ". ¡Gracias!";
+  return `https://wa.me/${n}?text=${encodeURIComponent(msg)}`;
+}
+
+function openDetail(id) {
+  const it = find(id);
+  if (!it) return closeSheet();
+  const t = total(it), p = pagado(it), s = saldo(it), e = estado(it);
+  const pct = t > 0 ? Math.min(100, Math.round(p / t * 100)) : 0;
+  const presto = it.tipo === "presto";
+  const abonos = (it.abonos || []).slice().sort((a, b) => (b.fecha || "").localeCompare(a.fecha || ""));
+  openSheet(`
+    <div style="display:flex;gap:6px;justify-content:center;margin-bottom:6px">
+      <span class="badge ${it.tipo}">${presto ? "Me debe" : "Le debo"}</span>
+      <span class="badge ${e}">${ESTADO[e]}</span></div>
+    <h3 style="text-align:center;margin-bottom:4px">${esc(it.persona)}</h3>
+    <div class="hero">
+      <small>${s > 0 ? "Saldo pendiente" : "Total devuelto"}</small>
+      <div class="big ${s > 0 ? (presto ? "pos" : "neg") : ""}">${money(s > 0 ? s : t)}</div>
+      <div class="bar"><i style="width:${pct}%"></i></div>
+      <small>Pagado ${money(p)} de ${money(t)} (${pct}%)</small>
+    </div>
+    ${s > 0 ? `<div class="box">
+      <div class="row2">
+        <label class="fld">Abono (S/)<input id="abMonto" inputmode="decimal" placeholder="${s.toFixed(2)}"></label>
+        <label class="fld">Fecha<input id="abFecha" type="date" value="${hoy()}"></label>
+      </div>
+      <div class="actions">
+        <button class="btn primary" data-act="abonar" data-id="${it.id}">Registrar abono</button>
+        <button class="btn" data-act="pagoTotal" data-id="${it.id}">${presto ? "Pagó todo" : "Pagué todo"}</button>
+      </div></div>` : ""}
+    ${presto && s > 0 && it.telefono ? `<a class="btn wa block" style="display:block;text-align:center;text-decoration:none" href="${waLink(it)}" target="_blank" rel="noopener">Recordar por WhatsApp</a>` : ""}
+    <div class="info">
+      <div><span>${presto ? "Le presté" : "Me prestó"}</span><span>${money(it.monto)}</span></div>
+      ${+it.interes ? `<div><span>Interés</span><span>${it.interes}% (${money(t - it.monto)})</span></div>` : ""}
+      ${it.fecha ? `<div><span>Fecha</span><span>${fdate(it.fecha)}</span></div>` : ""}
+      <div><span>Fecha límite</span><span>${it.vence ? fdate(it.vence) : "Sin fecha"}</span></div>
+      ${it.telefono ? `<div><span>Celular</span><span><a href="tel:${esc(it.telefono.replace(/[^\d+]/g, ""))}" style="color:var(--brand)">${esc(it.telefono)}</a></span></div>` : ""}
+      ${it.nota ? `<div><span>Nota</span><span>${esc(it.nota)}</span></div>` : ""}
+    </div>
+    <h2 style="margin-top:14px">Abonos (${abonos.length})</h2>
+    ${abonos.length ? `<ul class="pays">${abonos.map(a => `<li><div><b>${money(a.monto)}</b><small>${fdate(a.fecha)}</small></div>
+      <button class="x" data-act="borrarAbono" data-id="${it.id}" data-ab="${a.id}" aria-label="Quitar abono">×</button></li>`).join("")}</ul>`
+      : `<p class="note">Todavía no hay abonos.</p>`}
+    <div class="btns">
+      <button class="btn block" data-act="editar" data-id="${it.id}">Editar datos</button>
+      <button class="btn block danger" data-act="eliminar" data-id="${it.id}">Eliminar registro</button>
+    </div>`);
+}
+
+function addAbono(it, monto, fecha) {
+  it.abonos = it.abonos || [];
+  it.abonos.push({ id: uid(), monto: r2(monto), fecha: fecha || hoy() });
+  save(); render(); openDetail(it.id);
+}
+
+function openMenu() {
+  openSheet(`<h3>Opciones</h3><div class="menu">
+    <button class="btn" data-act="exportar">💾 Guardar copia de seguridad</button>
+    <button class="btn" data-act="importar">📂 Restaurar una copia</button>
+    </div>
+    <p class="note">Tus datos se guardan solo en este celular, dentro del navegador. Si borras los datos del navegador o cambias de celular se pierden, así que guarda una copia de vez en cuando (por ejemplo, envíatela por WhatsApp o a Drive).</p>`);
+}
+async function exportar() {
+  const json = JSON.stringify({ app: "prestamos", version: 1, guardado: new Date().toISOString(), ...data }, null, 2);
+  const nombre = `prestamos-${hoy()}.json`;
+  try {
+    const file = new File([json], nombre, { type: "application/json" });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Copia de préstamos y deudas" });
+      return toast("Copia lista");
+    }
+  } catch (e) { if (e && e.name === "AbortError") return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  toast("Copia descargada");
+}
+$("#fileIn").addEventListener("change", e => {
+  const file = e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (!d || !Array.isArray(d.items)) throw 0;
+      if (!confirm(`La copia tiene ${d.items.length} registros. Reemplazará lo que tienes ahora. ¿Continuar?`)) return;
+      data = { items: d.items };
+      save(); closeSheet(); go("inicio"); toast("Copia restaurada");
+    } catch (_) { toast("Ese archivo no es una copia válida"); }
+  };
+  r.readAsText(file);
+});
+
+let toastT;
+function toast(msg) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act],[data-open],[data-view],[data-filtro],[data-persona]");
+  if (!el) return;
+  if (el.dataset.view) return go(el.dataset.view);
+  if (el.dataset.open) return openDetail(el.dataset.open);
+  if (el.dataset.filtro) { filtro = el.dataset.filtro; return render(); }
+  if (el.dataset.persona) { busca = el.dataset.persona; filtro = "todos"; return go("lista"); }
+  const id = el.dataset.id, it = id ? find(id) : null;
+  switch (el.dataset.act) {
+    case "nuevo": return openForm();
+    case "menu": return openMenu();
+    case "cerrar": return closeSheet();
+    case "detalle": return openDetail(id);
+    case "editar": return openForm(id);
+    case "exportar": return exportar();
+    case "importar": return $("#fileIn").click();
+    case "abonar": {
+      const m = num($("#abMonto").value);
+      if (!(m > 0)) return toast("Escribe el monto del abono");
+      if (m > saldo(it) + 0.001) return toast(`El abono no puede pasar el saldo (${money(saldo(it))})`);
+      addAbono(it, m, $("#abFecha").value);
+      return toast(saldo(it) <= 0 ? "¡Pagado por completo!" : "Abono registrado");
+    }
+    case "pagoTotal":
+      if (!confirm(`¿Registrar el pago de ${money(saldo(it))}? Quedará como pagado.`)) return;
+      addAbono(it, saldo(it), $("#abFecha") ? $("#abFecha").value : hoy());
+      return toast("¡Pagado por completo!");
+    case "borrarAbono": {
+      const a = it.abonos.find(x => x.id === el.dataset.ab);
+      if (!a || !confirm(`¿Quitar el abono de ${money(a.monto)} del ${fdate(a.fecha)}?`)) return;
+      it.abonos = it.abonos.filter(x => x !== a);
+      save(); render(); return openDetail(it.id);
+    }
+    case "eliminar":
+      if (!confirm(`¿Eliminar el registro de ${it.persona}? No se puede deshacer.`)) return;
+      data.items = data.items.filter(x => x !== it);
+      save(); closeSheet(); render(); return toast("Registro eliminado");
+  }
+});
+
+load();
+render();
+</script>
+</body>
+</html>
