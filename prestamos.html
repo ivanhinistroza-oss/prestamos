@@ -33,6 +33,7 @@ button{cursor:pointer}
 header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--brand);color:var(--brand-ink)}
 header h1{flex:1;margin:0;font-size:19px;font-weight:700}
 .inst{border:0;background:rgba(255,255,255,.2);color:inherit;border-radius:20px;padding:7px 12px;font-size:14px;font-weight:600}
+.icon-btn svg{width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;vertical-align:middle}
 .icon-btn{border:0;background:transparent;color:inherit;width:40px;height:40px;border-radius:50%;font-size:22px;line-height:1}
 main{max-width:560px;margin:0 auto;padding:14px 16px 80px}
 h2{font-size:15px;margin:20px 2px 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
@@ -166,6 +167,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   <button class="icon-btn menu-btn" data-act="abrirMenu" aria-label="Abrir menú" aria-expanded="false" aria-controls="drawer">☰</button>
   <h1 id="titulo">Inicio</h1>
   <button class="inst" data-act="instalar" hidden>📲 Instalar</button>
+  <button class="icon-btn" data-act="buscar" aria-label="Buscar por nombre"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
 </header>
 
 <aside id="drawer" aria-label="Menú">
@@ -200,7 +202,7 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 <script>
 const KEY = "prestamos.data";
 let data = { items: [] };
-let view = "inicio", filtro = "todos", busca = "";
+let view = "inicio", filtro = "todos", busca = "", buscaP = "";
 
 const $ = s => document.querySelector(s);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -208,7 +210,8 @@ const r2 = n => Math.round((+n || 0) * 100) / 100;
 const num = s => r2(parseFloat(String(s || "").replace(",", ".")));
 const money = n => "S/ " + r2(n).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const clave = s => String(s || "").trim().toLowerCase();
+// Para comparar nombres sin importar mayúsculas ni tildes (José = jose)
+const clave = s => String(s || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 function hoy() {
   const d = new Date();
@@ -328,10 +331,12 @@ function filtrados() {
 function listaHtml() {
   const items = filtrados();
   return items.length ? `<div class="list">${items.map(itemHtml).join("")}</div>`
-    : `<div class="empty">${data.items.length ? "No hay nada con este filtro." : "Todavía no registras nada. Toca el botón + para empezar."}</div>`;
+    : `<div class="empty">${!data.items.length ? "Todavía no registras nada. Toca el botón + para empezar."
+      : busca.trim() ? `No hay nadie que se llame “${esc(busca.trim())}”${filtro !== "todos" ? " con este filtro" : ""}.`
+      : "No hay nada con este filtro."}</div>`;
 }
 function renderLista() {
-  return `<input class="search" id="busca" type="search" placeholder="Buscar persona o nota" value="${esc(busca)}">
+  return `<input class="search" id="busca" type="search" placeholder="🔍 Buscar por nombre o nota" value="${esc(busca)}" autocomplete="off">
     <div class="chips">${FILTROS.map(([k, l]) => `<button class="chip ${filtro === k ? "on" : ""}" data-filtro="${k}">${l}</button>`).join("")}</div>
     <div id="listaRes">${listaHtml()}</div>`;
 }
@@ -350,10 +355,16 @@ function personas() {
     .sort((a, b) => Math.abs(b.neto) - Math.abs(a.neto) || a.nombre.localeCompare(b.nombre));
 }
 function renderPersonas() {
-  const ps = personas();
-  if (!ps.length) return `<div class="empty">Aún no hay personas. Toca el botón + para registrar un préstamo.</div>`;
-  return `<p class="note">El neto resta lo que tú le debes a cada persona de lo que ella te debe.</p>
-    <div class="list">${ps.map(p => `<button class="person" data-persona="${esc(p.nombre)}">
+  if (!data.items.length) return `<div class="empty">Aún no hay personas. Toca el botón + para registrar un préstamo.</div>`;
+  return `<input class="search" id="buscaP" type="search" placeholder="🔍 Buscar por nombre" value="${esc(buscaP)}" autocomplete="off">
+    <p class="note">El neto resta lo que tú le debes a cada persona de lo que ella te debe.</p>
+    <div id="persRes">${personasHtml()}</div>`;
+}
+function personasHtml() {
+  const q = clave(buscaP);
+  const ps = personas().filter(p => !q || clave(p.nombre).includes(q));
+  if (!ps.length) return `<div class="empty">No hay nadie que se llame “${esc(buscaP.trim())}”.</div>`;
+  return `<div class="list">${ps.map(p => `<button class="person" data-persona="${esc(p.nombre)}">
       <span class="av ${p.neto >= 0 ? "presto" : "debo"}">${esc(p.nombre.charAt(0).toUpperCase())}</span>
       <span class="mid"><b>${esc(p.nombre)}</b><small>
         ${p.meDebe > 0 ? `<span>Me debe ${money(p.meDebe)}</span>` : ""}
@@ -371,6 +382,15 @@ function render() {
   $(".opt-inst").hidden = instalada();
   const inp = $("#busca");
   if (inp) inp.addEventListener("input", () => { busca = inp.value; $("#listaRes").innerHTML = listaHtml(); });
+  const inpP = $("#buscaP");
+  if (inpP) inpP.addEventListener("input", () => { buscaP = inpP.value; $("#persRes").innerHTML = personasHtml(); });
+}
+// Botón 🔍 de arriba: abre Movimientos con el buscador listo para escribir
+function buscar() {
+  if (view === "personas") return $("#buscaP") && $("#buscaP").focus();
+  filtro = "todos";
+  go("lista");
+  $("#busca").focus();
 }
 const TITULOS = { inicio: "Inicio", lista: "Movimientos", personas: "Personas" };
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
@@ -619,6 +639,7 @@ document.addEventListener("click", e => {
     case "abrirMenu": return setMenu(true);
     case "cerrarMenu": return;
     case "ayuda": return openAyuda();
+    case "buscar": return buscar();
     case "cerrar": return closeSheet();
     case "detalle": return openDetail(id);
     case "editar": return openForm(id);
