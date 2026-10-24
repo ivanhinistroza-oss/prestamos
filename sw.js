@@ -1,6 +1,6 @@
 // Guarda la app en el celular para que abra sin internet.
 // Al cambiar la app, sube el número de CACHE_NAME.
-const CACHE_NAME = "prestamos-v1";
+const CACHE_NAME = "prestamos-v2";
 const APP_FILES = [
   "./",
   "./index.html",

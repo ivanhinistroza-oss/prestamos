@@ -27,7 +27,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
 html,body{margin:0;background:var(--bg);color:var(--ink)}
-body{font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+body{font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding-bottom:env(safe-area-inset-bottom)}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;background:var(--brand);color:var(--brand-ink)}
@@ -84,11 +84,32 @@ h2{font-size:15px;margin:20px 2px 8px;color:var(--muted);font-weight:600;text-tr
 .btn.wa{background:#25d366;border-color:#25d366;color:#05301a}
 .btn.block{width:100%}
 
-.fab{position:fixed;right:18px;bottom:calc(86px + env(safe-area-inset-bottom));z-index:6;width:58px;height:58px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);font-size:30px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
-nav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav button{flex:1;border:0;background:transparent;padding:9px 4px 8px;color:var(--muted);font-size:12px;display:flex;flex-direction:column;align-items:center;gap:2px}
-nav button span{font-size:21px;line-height:1}
-nav button.on{color:var(--brand);font-weight:600}
+.fab{position:fixed;right:18px;bottom:calc(20px + env(safe-area-inset-bottom));z-index:6;width:58px;height:58px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-ink);font-size:30px;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+
+/* Menú lateral izquierdo: cajón en el celular, fijo en pantallas grandes */
+#drawer{position:fixed;top:0;bottom:0;left:0;z-index:15;width:min(285px,82vw);background:var(--card);overflow-y:auto;padding:calc(14px + env(safe-area-inset-top)) 12px calc(16px + env(safe-area-inset-bottom));transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility .22s}
+body.menu-open #drawer{transform:none;visibility:visible;box-shadow:8px 0 28px rgba(0,0,0,.2)}
+#dback{position:fixed;inset:0;z-index:14;background:rgba(0,0,0,.45);opacity:0;pointer-events:none;transition:opacity .22s}
+body.menu-open #dback{opacity:1;pointer-events:auto}
+body.menu-open{overflow:hidden}
+.dhead{display:flex;align-items:center;gap:10px;padding:2px 4px 16px}
+.dhead img{width:42px;height:42px;border-radius:11px}
+.dhead div{flex:1}
+.dhead b{display:block;font-size:18px}
+.dhead small{color:var(--muted);font-size:13px}
+.dclose{color:var(--muted)}
+#drawer nav{display:flex;flex-direction:column;gap:2px}
+#drawer nav button{display:flex;align-items:center;gap:14px;width:100%;min-height:48px;padding:0 12px;border:0;border-left:3px solid transparent;border-radius:8px;background:transparent;color:var(--ink);font-size:15px;text-align:left}
+#drawer nav button.on{background:var(--brand-bg);color:var(--brand);border-left-color:var(--brand);font-weight:600}
+#drawer svg{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dsep{margin:16px 12px 6px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+@media (min-width:900px){
+  body{padding-left:260px}
+  #drawer{width:260px;transform:none;visibility:visible;z-index:7;border-right:1px solid var(--line)}
+  #dback,.menu-btn,.dclose{display:none}
+  body.menu-open{overflow:auto}
+}
+@media (prefers-reduced-motion:reduce){#drawer,#dback{transition:none}}
 
 dialog{border:0;padding:0;margin:auto 0 0;width:100%;max-width:100%;max-height:92vh;background:var(--card);color:var(--ink);border-radius:20px 20px 0 0;animation:up .2s ease-out}
 dialog::backdrop{background:rgba(0,0,0,.45)}
@@ -136,26 +157,41 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 .person{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:0;background:var(--card);border-radius:14px;padding:12px;box-shadow:var(--shadow)}
 .person .mid small span{margin-right:8px}
 
-#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
+#toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:20;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);text-align:center;opacity:0;transition:opacity .2s;pointer-events:none}
 #toast.show{opacity:1}
 </style>
 </head>
 <body>
 <header>
-  <h1>Préstamos y deudas</h1>
+  <button class="icon-btn menu-btn" data-act="abrirMenu" aria-label="Abrir menú" aria-expanded="false" aria-controls="drawer">☰</button>
+  <h1 id="titulo">Inicio</h1>
   <button class="inst" data-act="instalar" hidden>📲 Instalar</button>
-  <button class="icon-btn" data-act="menu" aria-label="Más opciones">⋮</button>
 </header>
+
+<aside id="drawer" aria-label="Menú">
+  <div class="dhead">
+    <img src="./icons/icon-192.png" alt="">
+    <div><b>Préstamos</b><small>y deudas</small></div>
+    <button class="icon-btn dclose" data-act="cerrarMenu" aria-label="Cerrar menú">✕</button>
+  </div>
+  <nav>
+    <button data-view="inicio"><svg viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>Inicio</button>
+    <button data-view="lista"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>Movimientos</button>
+    <button data-view="personas"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.5-3.6 3.2-6 6.5-6s6 2.4 6.5 6"/><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.3c2 .8 3.2 2.9 3.5 5.7"/></svg>Personas</button>
+  </nav>
+  <div class="dsep">Opciones</div>
+  <nav>
+    <button data-act="instalar" class="opt-inst"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M12 7v7M9 11l3 3 3-3"/></svg>Instalar en el celular</button>
+    <button data-act="exportar"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5"/><path d="M4 17v3h16v-3"/></svg>Guardar copia de seguridad</button>
+    <button data-act="importar"><svg viewBox="0 0 24 24"><path d="M12 15V4M7 9l5-5 5 5"/><path d="M4 17v3h16v-3"/></svg>Restaurar una copia</button>
+    <button data-act="ayuda"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Sobre tus datos</button>
+  </nav>
+</aside>
+<div id="dback" data-act="cerrarMenu"></div>
 
 <main id="main"></main>
 
 <button class="fab" data-act="nuevo" aria-label="Nuevo préstamo o deuda">+</button>
-
-<nav>
-  <button data-view="inicio"><span>🏠</span>Inicio</button>
-  <button data-view="lista"><span>📋</span>Movimientos</button>
-  <button data-view="personas"><span>👥</span>Personas</button>
-</nav>
 
 <dialog id="sheet"><div class="sheet"><div class="grip"></div><div id="sheetBody"></div></div></dialog>
 <input type="file" id="fileIn" accept="application/json,.json" hidden>
@@ -330,11 +366,20 @@ function renderPersonas() {
 
 function render() {
   $("#main").innerHTML = view === "lista" ? renderLista() : view === "personas" ? renderPersonas() : renderInicio();
-  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === view));
+  document.querySelectorAll("#drawer [data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === view));
+  $("#titulo").textContent = TITULOS[view];
+  $(".opt-inst").hidden = instalada();
   const inp = $("#busca");
   if (inp) inp.addEventListener("input", () => { busca = inp.value; $("#listaRes").innerHTML = listaHtml(); });
 }
+const TITULOS = { inicio: "Inicio", lista: "Movimientos", personas: "Personas" };
 function go(v) { view = v; render(); window.scrollTo(0, 0); }
+
+function setMenu(open) {
+  document.body.classList.toggle("menu-open", open);
+  $(".menu-btn").setAttribute("aria-expanded", open);
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") setMenu(false); });
 
 // Hoja inferior (formularios y detalle). El botón "atrás" del celular la cierra.
 const sheet = $("#sheet");
@@ -512,13 +557,12 @@ async function instalar() {
     <button class="btn block" data-act="cerrar">Entendido</button>`);
 }
 
-function openMenu() {
-  openSheet(`<h3>Opciones</h3><div class="menu">
-    ${instalada() ? "" : `<button class="btn" data-act="instalar">📲 Instalar en el celular</button>`}
-    <button class="btn" data-act="exportar">💾 Guardar copia de seguridad</button>
-    <button class="btn" data-act="importar">📂 Restaurar una copia</button>
-    </div>
-    <p class="note">Tus datos se guardan solo en este celular, dentro del navegador. Si borras los datos del navegador o cambias de celular se pierden, así que guarda una copia de vez en cuando (por ejemplo, envíatela por WhatsApp o a Drive).</p>`);
+function openAyuda() {
+  openSheet(`<h3>Sobre tus datos</h3>
+    <p>Tus préstamos y deudas se guardan <b>solo en este celular</b>, dentro del navegador. No se suben a internet.</p>
+    <p>Si borras los datos del navegador o cambias de celular se pierden, así que guarda una copia de vez en cuando con <b>Guardar copia de seguridad</b> (por ejemplo, envíatela por WhatsApp o a Drive).</p>
+    <p>Para pasarlos a otro celular, abre la app allí y usa <b>Restaurar una copia</b>.</p>
+    <button class="btn block" data-act="cerrar">Entendido</button>`);
 }
 async function exportar() {
   const json = JSON.stringify({ app: "prestamos", version: 1, guardado: new Date().toISOString(), ...data }, null, 2);
@@ -564,6 +608,7 @@ function toast(msg) {
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-act],[data-open],[data-view],[data-filtro],[data-persona]");
   if (!el) return;
+  if (el.closest("#drawer") || el.id === "dback") setMenu(false);
   if (el.dataset.view) return go(el.dataset.view);
   if (el.dataset.open) return openDetail(el.dataset.open);
   if (el.dataset.filtro) { filtro = el.dataset.filtro; return render(); }
@@ -571,7 +616,9 @@ document.addEventListener("click", e => {
   const id = el.dataset.id, it = id ? find(id) : null;
   switch (el.dataset.act) {
     case "nuevo": return openForm();
-    case "menu": return openMenu();
+    case "abrirMenu": return setMenu(true);
+    case "cerrarMenu": return;
+    case "ayuda": return openAyuda();
     case "cerrar": return closeSheet();
     case "detalle": return openDetail(id);
     case "editar": return openForm(id);
